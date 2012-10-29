@@ -1,3 +1,5 @@
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -6,10 +8,15 @@ from django.utils.translation import ugettext_lazy as _
 class EventType(models.Model):
     """
     This class defines the event type.
+    An eventType instance is linked to a ContentType (like auth.user, or
+    any other model that defines a resource whose usage needs to
+    be scheduled)
     """
     name = models.CharField(_('Type name'), max_length=128,
                             unique=True)
     descr = models.TextField(_('Description'), blank=True)
+    content_type = models.ForeignKey(ContentType, 
+                                     verbose_name=_('Reference Model'))
 
     class Meta:
         verbose_name = _('Event type')
@@ -27,6 +34,7 @@ class Event(models.Model):
     typology = models.ForeignKey(EventType, verbose_name=_('Type'))
     start = models.DateTimeField(_('Start'))
     end = models.DateTimeField(_('End'))
+    object_id = models.PositiveIntegerField()
 
     class Meta:
         verbose_name = _('Event')
@@ -36,5 +44,9 @@ class Event(models.Model):
         return self.name
 
     def clean(self):
-        if self.stop <= self.start:
+        if self.end <= self.start:
             raise ValidationError('End datetime must be after Start')
+
+    def related_object(self):
+        return str(self.typology.content_type.get_object_for_this_type(
+            id=self.object_id))
