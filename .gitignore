@@ -8,3 +8,6 @@
 
 # pycharm
 .idea/
+
+# south
+migrations/
