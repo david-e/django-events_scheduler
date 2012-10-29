@@ -10,7 +10,7 @@ class EventType(models.Model):
     This class defines the event type.
     An eventType instance is linked to a ContentType (like auth.user, or
     any other model that defines a resource whose usage needs to
-    be scheduled)
+    be scheduled).
     """
     name = models.CharField(_('Type name'), max_length=128,
                             unique=True)
@@ -48,5 +48,5 @@ class Event(models.Model):
             raise ValidationError('End datetime must be after Start')
 
     def related_object(self):
-        return str(self.typology.content_type.get_object_for_this_type(
-            id=self.object_id))
+        return self.typology.content_type.get_object_for_this_type(
+            id=self.object_id)
