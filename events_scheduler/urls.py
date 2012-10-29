@@ -4,5 +4,5 @@ import views
 
 
 urlpatterns = patterns('',
-    url('^timeline/$', views.scheduler_timeline, name='timeline')
+    url(r'^timeline/(?P<view>\w)/$', views.scheduler_timeline, name='timeline'),
 )
