@@ -97,7 +97,9 @@ def data_processor(request):
     # !nativeeditor_status could be: inserted, deleted, updated
     operation = d['%s_!nativeeditor_status' % tmp_id]
     if operation not in VALID_OPERATIONS:
-        raise Http404
+        # return an empty response, if we return an error
+        # the client-side data_processor stops to handle further operations
+        raise HttpResponse()
     if operation == 'inserted':
         ev = models.Event.objects.create(**data)
     else:
