@@ -45,8 +45,8 @@ def _get_child_and_relative_events(event_type):
         # FIXME: list only the events in the visible range, not all.
         for e in event_type.event_set.filter(object_id=o.id):
             events.append(_event2js(e, ekey))
-    child = {'label': event_type.name, 'key': key, "open": True, 
-             'children': children.values()}
+    child = {'label': event_type.name, 'key': key, "open": True,
+             'children': children.values(), 'readonly': event_type.readonly}
     return child, events
 
     
@@ -94,6 +94,10 @@ def data_processor(request):
     section_id = d['%s_section_id' % tmp_id]
     typology_id, data['object_id'] = section_id.split('.')
     data['typology'] = models.EventType.objects.get(id=typology_id)
+    # prevent modifications to events of readonly type
+    if data['typology'].readonly:
+        return HttpResponse(json.dumps({}), 
+                            mimetype='text/javascript')
     # !nativeeditor_status could be: inserted, deleted, updated
     operation = d['%s_!nativeeditor_status' % tmp_id]
     if operation not in VALID_OPERATIONS:

@@ -17,6 +17,7 @@ class EventType(models.Model):
     descr = models.TextField(_('Description'), blank=True)
     content_type = models.ForeignKey(ContentType, 
                                      verbose_name=_('Reference Model'))
+    readonly = models.BooleanField(_('Read-only'), default=False)
 
     class Meta:
         verbose_name = _('Event type')
