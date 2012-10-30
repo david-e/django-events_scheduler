@@ -1,33 +1,50 @@
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
+from datetime import datetime
 import json
 
 import models
 from timeline_params import TIMELINE_VIEWS_PARAMS
 
 
+DATETIME_FORMAT = '%Y-%m-%d %H:%M'
+
+
+def _event2js(ev, section_id):
+    """
+    Convert an event instance in a javascript dictionary, ready
+    for the timeline scheduler.
+    """
+    return {
+        'pk': ev.pk,
+        'section_id': section_id,
+        'text': ev.name,
+        'start_date': ev.start.strftime(DATETIME_FORMAT),
+        'end_date': ev.end.strftime(DATETIME_FORMAT),
+    }
+
+
 def _get_child_and_relative_events(event_type):
-    DATETIME_FORMAT = '%Y-%m-%d %H:%M'
+    """
+    Collect all the available resources of type event_type and 
+    collect all the events relative to theese resources.
+    """
     events = []
     key = '%s' % event_type.id
     label = event_type.name
     children = {}
     # create an entry in the resources list for all event_type.content_type objects
     for o in event_type.content_type.get_all_objects_for_this_type():
+        # ekey will be the section_id for a row in the scheduler
         ekey = '%s.%s' % (key, o.id) 
         if ekey not in children.keys():
             children[ekey] = {'key': ekey, 'label': '%s' % o}
         # append all the events
         # FIXME: list only the events in the visible range, not all.
         for e in event_type.event_set.filter(object_id=o.id):
-            events.append({
-                'section_id': ekey, 
-                'text': e.name, 
-                'start_date': e.start.strftime(DATETIME_FORMAT),
-                'end_date': e.end.strftime(DATETIME_FORMAT),
-            })
+            events.append(_event2js(e, ekey))
     child = {'label': event_type.name, 'key': key, "open": True, 
              'children': children.values()}
     return child, events
@@ -56,5 +73,41 @@ def scheduler_timeline(request, view):
 
 @csrf_exempt
 def data_processor(request):
-    import ipdb; ipdb.set_trace()
-    raise Http404
+    """
+    Manage the server-side part of insert, update, delete operations.
+    The client-side part is managed by a DataProcessor instance variable.
+    """
+    # ensure that data was sent by post
+    if not request.method == 'POST':
+        raise Http404
+
+    VALID_OPERATIONS = ['inserted', 'deleted', 'updated']
+    
+    d, data = request.POST, {}
+    tmp_id = d['ids']
+    data['start'] = datetime.strptime(d['%s_start_date' % tmp_id], 
+                                           DATETIME_FORMAT)
+    data['end'] = datetime.strptime(d['%s_end_date' % tmp_id], 
+                                         DATETIME_FORMAT)
+    data['name'] = d['%s_text' % tmp_id]
+    # section_id is in the form '%s.%s' % (event.typology.id, event.object_id)
+    section_id = d['%s_section_id' % tmp_id]
+    typology_id, data['object_id'] = section_id.split('.')
+    data['typology'] = models.EventType.objects.get(id=typology_id)
+    # !nativeeditor_status could be: inserted, deleted, updated
+    operation = d['%s_!nativeeditor_status' % tmp_id]
+    if operation not in VALID_OPERATIONS:
+        raise Http404
+    if operation == 'inserted':
+        ev = models.Event.objects.create(**data)
+    else:
+        ev_pk = d['%s_pk' % tmp_id]
+        ev = models.Event.objects.get(pk=ev_pk)
+        if operation == 'deleted':
+            ev.delete()
+        elif operation == 'updated':
+            for field in data.keys():
+                setattr(ev, field, data[field])
+            ev.save()        
+    return HttpResponse(json.dumps(_event2js(ev, section_id)), 
+                                   mimetype='text/javascript')
