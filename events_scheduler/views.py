@@ -8,23 +8,26 @@ from timeline_params import TIMELINE_VIEWS_PARAMS
 
 
 def _get_child_and_relative_events(event_type):
-    # FIXME: list only the events in the visible range, not all.
     DATETIME_FORMAT = '%Y-%m-%d %H:%M'
     events = []
-    key = str(event_type.id)
+    key = '%s' % event_type.id
     label = event_type.name
     children = {}
-    for e in event_type.event_set.all():
-        ekey = '%s.%s' % (key, e.object_id) 
+    # create an entry in the resources list for all event_type.content_type objects
+    for o in event_type.content_type.get_all_objects_for_this_type():
+        ekey = '%s.%s' % (key, o.id) 
         if ekey not in children.keys():
-            children[ekey] = {'key': ekey, 'label': '%s' % e.related_object()}
-        events.append({
-            'section_id': ekey, 
-            'text': e.name, 
-            'start_date': e.start.strftime(DATETIME_FORMAT),
-            'end_date': e.end.strftime(DATETIME_FORMAT),
-        })
-    child = {'label': event_type.name, 'key': ekey, "open": True, 
+            children[ekey] = {'key': ekey, 'label': '%s' % o}
+        # append all the events
+        # FIXME: list only the events in the visible range, not all.
+        for e in event_type.event_set.filter(object_id=o.id):
+            events.append({
+                'section_id': ekey, 
+                'text': e.name, 
+                'start_date': e.start.strftime(DATETIME_FORMAT),
+                'end_date': e.end.strftime(DATETIME_FORMAT),
+            })
+    child = {'label': event_type.name, 'key': key, "open": True, 
              'children': children.values()}
     return child, events
 
