@@ -1,5 +1,6 @@
 from django.http import Http404
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
 import json
 
@@ -51,3 +52,9 @@ def scheduler_timeline(request, view):
         'events': json.dumps(events),
         'PARAMS': TIMELINE_VIEWS_PARAMS[view],
     })
+
+
+@csrf_exempt
+def data_processor(request):
+    import ipdb; ipdb.set_trace()
+    raise Http404

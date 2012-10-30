@@ -5,10 +5,9 @@
     <title>{{ TITLE|default:"Timeline" }}</title>
 
     <script src='{% static "js/dhtmlx/dhtmlxscheduler.js" %}' type="text/javascript" charset="utf-8"></script>
-    <script src='{% static "js/dhtmlx/ext/dhtmlxscheduler_timeline.js"%}' type="text/javascript"
-            charset="utf-8"></script>
-    <script src='{% static "js/dhtmlx/ext/dhtmlxscheduler_treetimeline.js"%}' type="text/javascript"
-            charset="utf-8"></script>
+    <script src='{% static "js/dhtmlx/ext/dhtmlxscheduler_timeline.js"%}' type="text/javascript"  charset="utf-8"></script>
+    <script src='{% static "js/dhtmlx/ext/dhtmlxscheduler_treetimeline.js"%}' type="text/javascript"  charset="utf-8"></script>
+    <script src='{% static "js/dhtmlx/ext/dhtmlxscheduler_tooltip.js"%}' type="text/javascript" charset="utf-8"></script>
 
     <link rel='stylesheet' type='text/css' href='{% static "css/dhtmlx/dhtmlxscheduler.css" %}'>
 
@@ -74,8 +73,15 @@
                 {name:"time", height:72, type:"time", map_to:"auto"}
             ]
 
-            scheduler.init('events_scheduler', new Date(), "timeline");
+            scheduler.init('events_scheduler', null, "timeline");
             scheduler.parse({{ events|safe }}, "json");
+
+	    //=============================
+            // Server backed connection
+            //=============================
+
+	    var dp = new dataProcessor("{% url data_processor %}")
+	    dp.init(scheduler);
 
         }
     </script>
