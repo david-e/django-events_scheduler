@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 import models
-from timeline_params import TIMELINE_VIEWS_PARAMS
+from timeline_params import COLORS, TIMELINE_VIEWS_PARAMS
 
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M'
@@ -23,6 +23,8 @@ def _event2js(ev, section_id):
         'text': ev.name,
         'start_date': ev.start.strftime(DATETIME_FORMAT),
         'end_date': ev.end.strftime(DATETIME_FORMAT),
+        'color': ev.background_color,
+        'textColor': ev.text_color,
     }
 
 

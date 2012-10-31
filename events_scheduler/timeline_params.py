@@ -1,3 +1,8 @@
+from django.utils.translation import ugettext_lazy as _
+
+from random import randint
+
+
 # d=Day, w=Week and m=Month 
 TIMELINE_VIEWS_PARAMS = {
     'd': {
@@ -41,3 +46,36 @@ TIMELINE_VIEWS_PARAMS = {
         'second_scale': {'x_unit': 'month', 'x_date': '%F'}
     },
 }
+
+class Colors(object):
+    _choices = (
+        (('0', _('Black on green')),   ('#00ff88', 'black')), 
+        (('1', _('Gray on yellow')),    ('#ffe763', '#b7a543')),
+        (('2', _('White on purple')), ('purple', 'white')),       
+        (('3', _('White on red')),       ('red', 'white')),         
+        (('4', _('White on blue')),     ('blue', 'white')),
+    )
+
+    def get_color(self, index=None):
+        """
+        Return the the index color from the _choices array.
+        If index is None or a inexistent value return a random color
+        """
+        if type(index) in [unicode, str]:
+            index = int(index)
+        if  index is None:
+            index = self._randint()
+        return self._choices[index][1]
+
+    def _randint(self):
+        return randint(0, len(self._choices)-1)
+        
+    def pick_choice(self):
+        return str(self._randint())
+        
+    @property
+    def choices(self):
+        return [c[0] for c in self._choices]
+
+        
+COLORS = Colors()

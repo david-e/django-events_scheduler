@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from timeline_params import COLORS
+
 
 class EventType(models.Model):
     """
@@ -36,6 +38,8 @@ class Event(models.Model):
     start = models.DateTimeField(_('Start'))
     end = models.DateTimeField(_('End'))
     object_id = models.PositiveIntegerField()
+    color = models.CharField(_('Color'), max_length=2, choices=COLORS.choices,
+                             default=COLORS.pick_choice)
 
     class Meta:
         verbose_name = _('Event')
@@ -51,3 +55,11 @@ class Event(models.Model):
     def related_object(self):
         return self.typology.content_type.get_object_for_this_type(
             id=self.object_id)
+
+    @property
+    def background_color(self):
+        return COLORS.get_color(self.color)[0]
+
+    @property
+    def text_color(self):
+        return COLORS.get_color(self.color)[1]
