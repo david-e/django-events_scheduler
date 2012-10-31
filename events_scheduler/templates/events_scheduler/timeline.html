@@ -20,6 +20,10 @@
             overflow: hidden;
         }
 
+      .dhx_event_resize {
+	  display: none;
+      }
+
     </style>
 
     <script type="text/javascript" charset="utf-8">
@@ -80,9 +84,22 @@
 	    //=============================
             // Server backed connection
             //=============================
-
 	    var dp = new dataProcessor("{% url data_processor %}")
 	    dp.init(scheduler);
+
+	    //=============================
+	    // Events handling
+	    //=============================
+	    // disable events creation, only the properties of existent events can be edited
+	    scheduler.config.dblclick_create = false;
+	    scheduler.config.drag_create = false;
+	    scheduler.attachEvent("onBeforeDrag", function (event_id, mode, native_object) {
+		var ev = scheduler.getEvent(event_id);
+		if (!ev)
+		    return true;
+		var parentSectionId = ev.section_id.split('.')[0];
+		return !scheduler.getSection(parentSectionId).readonly;
+	    });
 
         }
     </script>
